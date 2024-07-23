@@ -10,5 +10,6 @@
     localization embedded into a planning framework.
     <br />   
     <br />   
-    We will soon release the code; we need time to clean it and make it understandable! 
+    We will soon release the code; we need time to clean it and make it understandable! For now you can check our <a href="https://arxiv.org/abs/2407.15593">preprint</a>
+  - accepted ECCV 2024.
 </div>
