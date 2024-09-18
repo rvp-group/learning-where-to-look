@@ -21,7 +21,7 @@ The following external dependencies are required
 | [CUDA](https://developer.nvidia.com/cuda-12-1-0-download-archive) | <12.1                    |
 
 >[!IMPORTANT]
- >CUDA is used both during training by `torch` and to efficiently process viewpoints visbility. 
+ >CUDA is used both during training by `torch` and to efficiently process viewpoints visibility. 
 
 # Install (local) via `pip`
 
