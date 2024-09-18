@@ -25,7 +25,7 @@ The following external dependencies are required
 
 # Install (local) via `pip`
 
-First download this repo and `cd learning-where-to-look`. Once inside the folder, you can install `learning-where-to-look` using `pip`
+First download this repo and `cd learning-where-to-look`. Once inside the folder, you can build/install `learning-where-to-look` using `pip`
 ```bash
 pip install .
 ```
