@@ -21,14 +21,7 @@ The following external dependencies are required
 | [CUDA](https://developer.nvidia.com/cuda-12-1-0-download-archive) | <12.1                    |
 
 >[!IMPORTANT]
- >CUDA is used both during training by `torch` and to efficiently process viewpoints vibility. 
-
-
-# Download some data (training and test set)
-train: ```wget ftp://anonymous:@151.100.59.119/learning_where_to_look/train_data_10_meshes.pickle```
-
-test: ```wget ftp://anonymous:@151.100.59.119/learning_where_to_look/test_data_2_meshes.pickle```
-
+ >CUDA is used both during training by `torch` and to efficiently process viewpoints visbility. 
 
 # Install (local) via `pip`
 
@@ -38,7 +31,16 @@ pip install .
 ```
 
 # Training
-Run training with the following script, default is 300 epochs
+
+### Download some data (training and test set)
+
+train: ```wget ftp://anonymous:@151.100.59.119/learning_where_to_look/train_data_10_meshes.pickle```
+
+test: ```wget ftp://anonymous:@151.100.59.119/learning_where_to_look/test_data_2_meshes.pickle```
+
+### Run
+
+Run training with the following script; the default is 300 epochs
 
 ```python3 lwl/apps/training/mlp_train.py --data_path <path-to-training-data.pickle> --test_data_path <path-to-test-data.pickle> --checkpoint_path models/tmp_training```
 
@@ -55,7 +57,7 @@ If you use any of this code, please cite our <a href="https://arxiv.org/abs/2407
 ```
 
 # What's Missing
-The repo is currently under huge updates, you can keep track here
+The repo is currently under huge updates; you can keep track here
 
 | Feature/Component         | Status        |
 | ------------------------- | ------------- |
