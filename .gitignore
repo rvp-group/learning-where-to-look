@@ -21,3 +21,5 @@ results/
 
 *.ply  
 *.txt  
+
+lwl/_version.py
