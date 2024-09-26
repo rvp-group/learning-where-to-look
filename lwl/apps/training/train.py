@@ -2,31 +2,17 @@ import torch
 from torch.utils.data import DataLoader
 
 import argparse
-import numpy as np
 from datetime import date
 
-from mlp_data_loader import DataMLPTrain
-from mlp_trainer import MLPTrainer
-from mlp import MLPClassifier
+from lwl.apps.training.data_loader import DataMLPTrain
+from lwl.apps.training.trainer import MLPTrainer
+from lwl.apps.training.mlp import MLPClassifier
 
 from lwl.apps.utils.general_utils import *
 from lwl.apps.utils.seed import *
-
-
-def load_dataset(path_to_dataset):
-        
-    print("loading data {}".format(path_to_dataset))
-    
-    dataset = dict()
-    with open(path_to_dataset, 'rb') as file:
-        dataset = pickle.load(file) 
-    
-    print("serialized data...")
-
-    return dataset
     
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='train MLP - active viewpoint classifier - this script requires also the test set to perform evaluation during training')
+    parser = argparse.ArgumentParser(description='train MLP - active viewpoint classifier - this script requires also the not processed test set to perform evaluation once training is completed')
     parser.add_argument('--data_path', type=str, required=True, help='path to your data file, this must be a unique pickle containing all data')
     parser.add_argument('--test_data_path', type=str, required=True, help='path to your data file, this must be a unique pickle containing all data')
     parser.add_argument('--epochs', type=int, default=300, help='number of epochs required for training')
@@ -48,8 +34,6 @@ if __name__ == "__main__":
     test_dataset = dataset["test"]
     normalizer = (dataset["mean"], dataset["std"])
        
-    # dims = InputDimsMLP()
-
     # splitting train and test data
     generator = torch.Generator().manual_seed(SEED)
 
@@ -72,7 +56,6 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_data, batch_size=args.batch_size, shuffle=False, num_workers=NUM_WORKERS, pin_memory=PIN_MEMORY)
 
     # initialize the MLP model
-    # TODO
     model = MLPClassifier(input_size=train_data.num_entities, output_size=1)
     model = model.to(device)
         

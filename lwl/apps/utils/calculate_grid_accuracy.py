@@ -4,7 +4,10 @@ from tqdm import tqdm
 
 from lwl.apps.utils.general_utils import *
 
-def calculate_accuracy(errors_t, errors_r, max_err_t=10, max_err_r=20):
+# this the best possible values within the test datasets used - Matterport (00017, 00270)
+BEST_POSSIBLE_NORMALIZER_2_MESHES_TEST=0.527
+
+def calculate_accuracy(errors_t, errors_r, max_err_t=10, max_err_r=20, normalizer=BEST_POSSIBLE_NORMALIZER_2_MESHES_TEST):
     total_num = len(errors_t)
     errors_t = np.asarray(errors_t)
     errors_r = np.asarray(errors_r)
@@ -34,7 +37,7 @@ def calculate_accuracy(errors_t, errors_r, max_err_t=10, max_err_r=20):
     results["total_num"] = total_num
     # results["succes_rate"] = success_rate
     for i, (k, v) in enumerate(accuracies.items()):
-        results[i] = (k, err_t_thresholds[k], err_r_thresholds[k], v/total_num)
+        results[i] = (k, err_t_thresholds[k], err_r_thresholds[k], (v/total_num)/normalizer)
     results["error_median"] = (np.nanmedian(errors_t), np.nanmedian(errors_r))
     return results
 

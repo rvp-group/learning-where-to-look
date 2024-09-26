@@ -1,4 +1,9 @@
+#!/bin/bash
+
+# TODO to compute in batch this need to be updated
+
 # this are the only required input
+
 # MATTERPORT_PATH=/media/ldg/T71/MH3D_10_scene/
 MATTERPORT_PATH=/media/ldg/T71/MH3D_2_test/
 
@@ -58,7 +63,7 @@ for dir in "${directories[@]}"; do
         
         # change path to run other script
         cd $CONVERT_PATH
-        python3 ${HOME}/source/eth/voxgraph/scripts/learning/txt2bin_grid.py --grid_file $output_filename
+        python3 ${HOME}/source/eth/voxgraph/scripts/learning/grid_converter.py --grid_file $output_filename
         echo converted output to bin
         cd $THIS_PATH
     done

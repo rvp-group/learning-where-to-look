@@ -1,29 +1,25 @@
-import torch
 import argparse
 import numpy as np
 from scipy.spatial.transform import Rotation
 
 from lwl.apps.utils.general_utils import *
-from lwl.apps.utils.data_loader import Data, InputDims
+from lwl.apps.utils.dataset_generator import Data, InputDims
 from lwl.apps.utils.colmap.colmap_read_write_model import read_images_binary
+from lwl.apps.utils.seed import *
 
 COLMAP_CAMERAS_FILE = "sparse/0/images.bin"
 LABELS_DIR = "labels_directions"
-SEED = 42
-# set the seed for all random stuff
-torch.manual_seed(SEED)
-np.random.seed(SEED)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(SEED)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='preprocessor')
+    parser = argparse.ArgumentParser(description='Prepare data for training, this script puts the data in correct format to speed up data loading during training. '
+                                                 'In addition does some processing, for instance dividing set with positive and negative samples, discretizing img in bins, etc')
     parser.add_argument('--data_path', type=str, required=True, help='path to your data file')
-    parser.add_argument('--positive_percentage', type=float, required=True, help='percentage of positive samples during required for training', default=0.5)
+    parser.add_argument('--positive_percentage', type=float, required=True, help='percentage of positive samples during required for training, i.e. 0.5 is balanced between positive and negative samples, for test set use 0 (no need to balance)', default=0.5)
     parser.add_argument('--rows', type=int, help='image rows', default=480)
     parser.add_argument('--cols', type=int, help='image cols', default=640)
     parser.add_argument('--num_bin_per_dim', type=int, help='number of bins per dimension', default=30)
     parser.add_argument('--output_data', type=str, help='output data filename, no extension required', required=True)
+    parser.add_argument('--parallel', type=int, help='process data in parallalel to speed up computation, 0 required or max num of cpu used, 1 single cpu, other number is custum', default=0)
     args = parser.parse_args()
 
     ############### start processing folders ###############
@@ -75,7 +71,7 @@ if __name__ == "__main__":
     
     dims = InputDims()
     print("processing data...")
-    dataset = Data(dims, (ordered_dirs_list, folders), args.positive_percentage, num_bins_per_dim=args.num_bin_per_dim, rows=args.rows, cols=args.cols, include_poses=camera_poses_list_of_list)
+    dataset = Data(dims, (ordered_dirs_list, folders), args.positive_percentage, num_bins_per_dim=args.num_bin_per_dim, rows=args.rows, cols=args.cols, include_poses=camera_poses_list_of_list, num_cpu=args.parallel)
 
     # strip extension from filename
     directory = os.path.dirname(args.output_data)
@@ -83,8 +79,8 @@ if __name__ == "__main__":
     with open(os.path.join(directory, filename) +".pickle", 'wb') as datafile:
         pickle.dump(dataset.data, datafile)
 
-    with open(os.path.join(directory, filename)+"_normalizer.pickle", 'wb') as datafile:
-        pickle.dump(dataset.normalizer, datafile)
+    # with open(os.path.join(directory, filename)+"_normalizer.pickle", 'wb') as datafile:
+    #     pickle.dump(dataset.normalizer, datafile)
     
     print("data deserialized in {}".format(directory))
     

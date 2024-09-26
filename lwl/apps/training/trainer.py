@@ -7,10 +7,10 @@ from torcheval.metrics.functional import binary_f1_score, binary_precision, bina
 from tqdm import tqdm
 
 from lwl.apps.utils.general_utils import *
-from lwl.apps.utils.calculate_grid_accuracy import calculate_accuracy, get_accuracies_of_n_elements
+from lwl.apps.utils.calculate_grid_accuracy import calculate_accuracy, get_accuracies_of_n_elements, BEST_POSSIBLE_NORMALIZER_2_MESHES_TEST
 
 SAVE_INTERVAL = 5 # save interval for checkpoint
-MODEL_NAME = "model_architecture.torch"
+MODEL_NAME = "0_model_architecture.torch"
 
 import wandb
 # this is just for tuning/logger configuration
@@ -38,6 +38,7 @@ class EarlyStopper:
                 return True
         return False
 
+
 class MLPTrainer():
 
     def __init__(self, model, epochs, device=None):
@@ -48,6 +49,31 @@ class MLPTrainer():
         self.epochs = epochs
         self.save_model = True
         self.writer = None
+
+    @staticmethod
+    def start_from_existing_model(checkpoint_path, remove=None):
+        checkpoint_files = list_and_order_files(checkpoint_path, True, remove_from_files=remove)
+        epoch, model, optimizer = 0, None, None
+        if(len(checkpoint_files) != 0):
+            last_checkpoint_filename = checkpoint_files[-1]
+            # print("loading existing model {}".format(last_checkpoint_filename))
+            dir, rest = os.path.split(checkpoint_path)
+            # print("looking for architecture in the folder {}".format(MODEL_NAME))
+            print(os.path.join(dir, rest, MODEL_NAME))
+            model = torch.load(os.path.join(dir, rest, MODEL_NAME))
+            # print("model overriden with")
+            # print(model)
+            checkpoint = torch.load(last_checkpoint_filename)
+            optimizer = None
+            epoch = checkpoint['epoch']
+            try:
+                model.load_state_dict(checkpoint['model_state_dict'])
+                optimizer = torch.optim.Adam(model.parameters(), lr=1e-4) 
+                optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            except Exception as e:
+                print("model {} changed, init from another folder otherwise current model will be overriden!".format(last_checkpoint_filename))
+                exit(0)
+        return epoch, model, optimizer
 
     def compute_and_write_stats(self, epoch, pred_list, y_list, name="train"):
         # list of tensors to tensor
@@ -83,9 +109,13 @@ class MLPTrainer():
     def train(self, data_loader, checkpoint_path, num_tests=50, test_data=None, pin_memory=True, batch_size=128): # threshold is max for regression accuracy calculation
         
         # check if exists model and params
-        bkp_epoch = self.start_from_existing_model(checkpoint_path, MODEL_NAME)
+        bkp_epoch, model, optimizer = self.start_from_existing_model(checkpoint_path, MODEL_NAME)
+                
         if(bkp_epoch == 0):
             print("starting training from scratch, no model provided")
+        else:
+            self.model = model
+            self.optimizer = optimizer
 
         # each test epoch
         test_epoch = int(self.epochs / num_tests) + 1
@@ -178,7 +208,7 @@ class MLPTrainer():
                 test_acc = self.compute_and_write_stats(epoch, pred_test, y_test, "test")
 
                 print(f"epoch {epoch + 1}/{self.epochs}, test [ loss: {test_loss} acc: {test_acc} ]")
-                # self.evaluate_benchmark(test_data, pred_test)
+                self.evaluate_benchmark(test_data, pred_test)
                 
             # test once in a lifetime
             # if(epoch % test_epoch == 0):
@@ -206,29 +236,10 @@ class MLPTrainer():
         
         return self.model
         
-    def start_from_existing_model(self, checkpoint_path, remove=None):
-        checkpoint_files = list_and_order_files(checkpoint_path, True, remove_from_files=remove)
-        epoch = 0
-        if(len(checkpoint_files) != 0):
-            last_checkpoint_filename = checkpoint_files[-1]
-            print("loading existing model {}".format(last_checkpoint_filename))
-            dir, rest = os.path.split(checkpoint_path)
-            print("looking for architecture in the folder {}".format(MODEL_NAME))
-            self.model = torch.load(os.path.join(dir, rest, MODEL_NAME))
-            print("model overriden with")
-            print(self.model)
-            checkpoint = torch.load(last_checkpoint_filename)
-            epoch = checkpoint['epoch']
-            try:
-                self.model.load_state_dict(checkpoint['model_state_dict'])
-                self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            except Exception as e:
-                print("model {} changed, init from another folder otherwise current model will be overriden!".format(last_checkpoint_filename))
-                exit(0)
-        return epoch
     
     # TODO
-    def evaluate_benchmark(self, data, predictions):
+    @staticmethod
+    def evaluate_benchmark(data, predictions):
         predictions_list_of_list = [t.tolist() for t in predictions]
         predictions = [item for sublist in predictions_list_of_list for item in sublist]
         best_viewpoints_per_bucket = dict()
@@ -238,13 +249,17 @@ class MLPTrainer():
             bucket_data = np.zeros((4, 1))
             bucket_data[0:3] = data[idx]['pose'].reshape(-1, 1)
             bucket_data[-1] = data[idx]['map'][0]
+            # print("bucket data", data[idx]['map'][0], data[idx]['pose'].reshape(-1, 1))
             pose_idx = bucket_data.tobytes()
             # initialize value
             if (pose_idx not in best_viewpoints_per_bucket.keys()):
                 best_viewpoints_per_bucket[pose_idx] = list() 
             best_viewpoints_per_bucket[pose_idx].append((idx, pred))
+
+        # for key, value in best_viewpoints_per_bucket.items():
+        #     print("pose idx {} value {}".format(key, value))
         
-        best_direction_dict = None
+        # best_direction_dict = None
         # sort from one with best probability to last one
         # print("sorting in descending order {}".format(self.modality))
         best_direction_dict = {key: sorted(value, key=lambda x: x[1], reverse=True) for key, value in best_viewpoints_per_bucket.items()}
@@ -255,7 +270,7 @@ class MLPTrainer():
             # sanity check, these might not be populated raise a warning
             if not et:
                 continue 
-            errors = calculate_accuracy(et, er)
+            errors = calculate_accuracy(et, er, BEST_POSSIBLE_NORMALIZER_2_MESHES_TEST)
             print("total num of samples {} using n {} best directions".format(errors["total_num"], v))
             # print("percentage cases of success {:.3f}".format(errors["succes_rate"]))
             print("localization benchmark results: ")
