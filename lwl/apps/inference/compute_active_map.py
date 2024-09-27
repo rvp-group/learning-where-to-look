@@ -120,47 +120,48 @@ if __name__ == "__main__":
     cols=1,
     start_cell="top-left", 
     specs=[[{"type": "scatter3d"}]])
+    
+    import plotly.colors as colors
+    def get_color_from_prob(prob, min_prob=0.0, max_prob=1.0, color_scale='YlGnBu'):
+        norm_prob = (prob - min_prob) / (max_prob - min_prob)    
+        color_scale_func = getattr(colors.sequential, color_scale)
+        # print(color_scale_func)
+        color_tuples = [tuple(map(int, color.replace('rgb(', '').replace(')', '').split(','))) for color in color_scale_func]
+        color_float = colors.find_intermediate_color(color_tuples[0], color_tuples[-1], norm_prob)
+        color = tuple(map(round, color_float))
+        return 'rgb'+str(color)
+        
+    # animation plot
+    from scipy.spatial.transform import Rotation
+    animation_data = dict()
+    LINE_LENGTH = 0.5
+    for values in best_direction_dict_ascent.values():
+        counter = 0
+        for v in values:
+            _, prob, pose, quat, pts_3d = v # this is best prediction
+            if(counter not in animation_data.keys()):
+                animation_data[counter] = list()
+            rot = Rotation.from_quat(quat)
+            dir = rot.as_matrix()[0:3, 2]
+            end = pose + LINE_LENGTH*dir
+            color = get_color_from_prob(prob)
+            color_pts = get_color_from_prob(prob, color_scale='Reds')
+            animation_data[counter].append((prob, color, color_pts, pose, dir, end, pts_3d))
+            counter += 1
+        
+    selected_key = max(animation_data.keys())
+    if(args.animate):
+        selected_key = min(animation_data.keys())
 
-
-    # print(best_direction_dict)
+    for prob, color, color_pts, pose, dir, end, pts_3d in animation_data[selected_key]:
+        fig.add_trace(go.Scatter3d(x=pts_3d[:, 0], y=pts_3d[:, 1], z=pts_3d[:, 2], mode='markers', marker=dict(color=color_pts, size=2, opacity=0.3)))
+        fig.add_trace(go.Scatter3d(x=[pose[0], end[0]], y=[pose[1], end[1]], z=[pose[2], end[2]],
+                                mode='lines', line=dict(color=color, width=5), opacity=0.4))
+        fig.add_trace(go.Cone(x=[end[0]], y=[end[1]], z=[end[2]], u=[dir[0]], 
+                        v=[dir[1]], w=[dir[2]], opacity=0.4, colorscale=[(0, color), (1, color)], 
+                        showscale=False, sizemode='scaled', sizeref=0.2, cmin=0, cmax=1))
 
     if(args.animate):
-        import plotly.colors as colors
-        def get_color_from_prob(prob, min_prob=0.0, max_prob=1.0, color_scale='YlGnBu'):
-            norm_prob = (prob - min_prob) / (max_prob - min_prob)    
-            color_scale_func = getattr(colors.sequential, color_scale)
-            # print(color_scale_func)
-            color_tuples = [tuple(map(int, color.replace('rgb(', '').replace(')', '').split(','))) for color in color_scale_func]
-            color_float = colors.find_intermediate_color(color_tuples[0], color_tuples[-1], norm_prob)
-            color = tuple(map(round, color_float))
-            return 'rgb'+str(color)
-            
-        # animation plot
-        from scipy.spatial.transform import Rotation
-        animation_data = dict()
-        LINE_LENGTH = 0.5
-        for values in best_direction_dict_ascent.values():
-            counter = 0
-            for v in values:
-                _, prob, pose, quat, pts_3d = v # this is best prediction
-                if(counter not in animation_data.keys()):
-                    animation_data[counter] = list()
-                rot = Rotation.from_quat(quat)
-                dir = rot.as_matrix()[0:3, 2]
-                end = pose + LINE_LENGTH*dir
-                color = get_color_from_prob(prob)
-                color_pts = get_color_from_prob(prob, color_scale='Reds')
-                animation_data[counter].append((prob, color, color_pts, pose, dir, end, pts_3d))
-                counter += 1
-                
-        for prob, color, color_pts, pose, dir, end, pts_3d in animation_data[0]:
-            fig.add_trace(go.Scatter3d(x=pts_3d[:, 0], y=pts_3d[:, 1], z=pts_3d[:, 2], mode='markers', marker=dict(color=color_pts, size=2, opacity=0.3)))
-            fig.add_trace(go.Scatter3d(x=[pose[0], end[0]], y=[pose[1], end[1]], z=[pose[2], end[2]],
-                                    mode='lines', line=dict(color=color, width=5), opacity=0.4))
-            fig.add_trace(go.Cone(x=[end[0]], y=[end[1]], z=[end[2]], u=[dir[0]], 
-                            v=[dir[1]], w=[dir[2]], opacity=0.4, colorscale=[(0, color), (1, color)], 
-                            showscale=False, sizemode='scaled', sizeref=0.2, cmin=0, cmax=1))
-
         import tqdm
         # create frames for the animation
         frames = list()
@@ -210,58 +211,28 @@ if __name__ == "__main__":
             ]
         )
 
-        # 3D view    
-        name = 'eye = (x:2, y:2, z:0.1)'
-        camera = dict(
-            eye=dict(x=2, y=2, z=0.1)
-        )
+    # 3D view    
+    name = 'eye = (x:2, y:2, z:0.1)'
+    camera = dict(
+        eye=dict(x=2, y=2, z=0.1)
+    )
 
-        
-        # X-Z plane 
-        # name = 'eye = (x:0., y:2.5, z:0.)'
-        # camera = dict(
-        # eye=dict(x=0., y=2.5, z=0.)
-        # )
+    
+    # X-Z plane 
+    # name = 'eye = (x:0., y:2.5, z:0.)'
+    # camera = dict(
+    # eye=dict(x=0., y=2.5, z=0.)
+    # )
 
-        # X-Y plane 
-        # name = 'eye = (x:0., y:0., z:2.5)'
-        # camera = dict(
-        #     eye=dict(x=0., y=0., z=2.5)
-        # )
+    # X-Y plane 
+    # name = 'eye = (x:0., y:0., z:2.5)'
+    # camera = dict(
+    #     eye=dict(x=0., y=0., z=2.5)
+    # )
 
-        fig.update_layout(scene_camera=camera, plot_bgcolor='white', showlegend=False, 
-            scene = dict(xaxis = dict(nticks=4, range=[np.min(landmarks[:, 0]), np.max(landmarks[:, 0])],),
-                        yaxis = dict(nticks=4, range=[np.min(landmarks[:, 1]), np.max(landmarks[:, 1])],),
-                        zaxis = dict(nticks=4, range=[np.min(landmarks[:, 2]), np.max(landmarks[:, 2])],),))
-        fig.update_scenes(aspectmode='data')
-        fig.show()    
-    else:
-    # static plot
-        print(best_direction_dict)
-        probs, locations, quats = list(), list(), list()
-        for values in best_direction_dict.values():
-            _, prob, pos, quat = values[0] # this is best prediction
-            probs.append(prob)
-            locations.append(pos)
-            quats.append(quat)
-
-        from plotly.express.colors import sample_colorscale
-        colors = sample_colorscale('YlGnBu', probs)
-        print(colors)
-        exit(0)
-        
-        from scipy.spatial.transform import Rotation
-        fig = plot_landmarks(fig, np.asarray(locations), row=1, col=1, color='red', opacity=0.3)
-        for (pose, quat, color) in zip(locations, quats, colors):
-            rot = Rotation.from_quat(quat)
-            # fig = plot_camera_frustum(fig, np.rad2deg(hfov), aspect_ratio=(cols / rows), near=0.05, far=0.3, camera_position=pose, camera_orientation=rot.as_matrix(), color=color)
-            fig = plot_active_direction(fig, start=pose, dir=rot.as_matrix()[0:3, 2], length=0.5, row=1, col=1, opacity=0.4, color=color)
-
-        
-        fig.update_layout(showlegend=False)
-        fig.update_scenes(aspectmode='data')
-        fig.show()
-
-
-
-
+    fig.update_layout(scene_camera=camera, plot_bgcolor='white', showlegend=False, 
+        scene = dict(xaxis = dict(nticks=4, range=[np.min(landmarks[:, 0]), np.max(landmarks[:, 0])],),
+                    yaxis = dict(nticks=4, range=[np.min(landmarks[:, 1]), np.max(landmarks[:, 1])],),
+                    zaxis = dict(nticks=4, range=[np.min(landmarks[:, 2]), np.max(landmarks[:, 2])],),))
+    fig.update_scenes(aspectmode='data')
+    fig.show()    

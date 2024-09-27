@@ -2,6 +2,7 @@ runs/
 models/
 wandb/
 venv/
+data/
 
 .vscode/
 

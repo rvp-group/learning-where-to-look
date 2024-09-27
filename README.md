@@ -32,17 +32,35 @@ pip install .
 
 # Training
 
-### Download some data (training and test set)
+### Download some data
 
-train: ```wget ftp://anonymous:@151.100.59.119/learning_where_to_look/train_data_10_meshes.pickle```
+```bash
+./download.sh 
+```
 
-test: ```wget ftp://anonymous:@151.100.59.119/learning_where_to_look/test_data_2_meshes.pickle```
+The script will download some data that you can use to play with:
+```
+├── train_MH3D_10_scene --> contains all the preprocessed meshes used for training, SfM models and precomputed viewpoints
+├── test_MH3D_2_scene --> contains all the preprocessed meshes used for testing, SfM models and precomputed viewpoints
+├── train_data_10_meshes_with_preprocessed_test.pickle --> contains data that can be loaded directly for learning, with essential (observed landmarks reprojections in image, landmarks in camera frame) train, validation, test, mean and std (last two used for input normalization)
+├── test_raw_data_2_meshes.pickle --> contains all preprocessed data used for testing with other information like locations used for evaluation
+└── raw_MH3D_00017.pickle --> preprocessed test mesh you can use to visualize results
+```
 
 ### Run
 
 Run training with the following script; the default is 300 epochs
 
-```python3 lwl/apps/training/mlp_train.py --data_path <path-to-training-data.pickle> --test_data_path <path-to-test-data.pickle> --checkpoint_path models/tmp_training```
+```bash
+python3 lwl/apps/training/mlp_train.py --data_path data/train_data_10_meshes_with_preprocessed_test.pickle --test_data_path data/test_raw_data_2_meshes.pickle --checkpoint_path data/mymodels/tmp_training
+```
+
+### Inference
+
+Run inference with already trained model
+```bash
+python3 lwl/apps/inference/compute_active_map.py --train_data_path data/train_data_10_meshes_with_preprocessed_test.pickle --evaluate_data_path data/raw_MH3D_00017.pickle --model_dir data/model/ --enable_viz --config_path configurations/sampler_matterport_1.cfg --landmarks data/test_MH3D_2_scene/MH3D_00017/sparse/0/points3D.txt
+```
 
 # Cite us
 If you use any of this code, please cite our <a href="https://arxiv.org/abs/2407.15593">paper</a> - accepted ECCV 2024:

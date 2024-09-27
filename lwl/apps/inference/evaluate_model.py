@@ -48,7 +48,7 @@ if __name__ == "__main__":
     print("model ", model)
 
     model.eval() 
-    pred_test = list(), list()               
+    pred_test = list()               
     for test_batch in test_loader: 
         pred = model(test_batch['input'].to(device=device, non_blocking=PIN_MEMORY))
         pred_test.append(pred.squeeze())

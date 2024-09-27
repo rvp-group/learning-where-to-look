@@ -59,7 +59,7 @@ class MLPTrainer():
             # print("loading existing model {}".format(last_checkpoint_filename))
             dir, rest = os.path.split(checkpoint_path)
             # print("looking for architecture in the folder {}".format(MODEL_NAME))
-            print(os.path.join(dir, rest, MODEL_NAME))
+            print("loading architecture", os.path.join(dir, rest, MODEL_NAME))
             model = torch.load(os.path.join(dir, rest, MODEL_NAME))
             # print("model overriden with")
             # print(model)
