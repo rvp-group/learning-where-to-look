@@ -60,13 +60,13 @@ python3 lwl/apps/training/mlp_train.py --data_path data/train_data_10_meshes_wit
 ```
 
 ## Inference
-Evaluate trained model numerically
+Evaluate the trained model numerically
 
 ```bash
 python3 lwl/apps/inference/evaluate_model.py --train_data_path data/train_data_10_meshes_with_preprocessed_test.pickle --evaluate_data_path data/raw_MH3D_00017.pickle --model_dir data/model/
 ```
 
-Evaluate trained model visually, showing best predicted viewpoints for each location and their observed landmarks
+Evaluate the trained model visually, showing best-predicted viewpoints for each location and their observed landmarks
 ```bash
 python3 lwl/apps/inference/compute_active_map.py --train_data_path data/train_data_10_meshes_with_preprocessed_test.pickle --evaluate_data_path data/raw_MH3D_00017.pickle --model_dir data/model/ --enable_viz --config_path configurations/sampler_matterport_1.cfg --landmarks data/test_MH3D_2_scene/MH3D_00017/sparse/0/points3D.txt
 ```
@@ -88,7 +88,7 @@ If you use any of this code, please cite our <a href="https://arxiv.org/abs/2407
 ```
 
 # What's Missing
-The repo is currently under updates; you can keep track here
+The repo is currently under update; you can keep track of it here
 
 | Feature/Component         | Status        |
 | ------------------------- | ------------- |
