@@ -10,8 +10,11 @@
     localization embedded into a planning framework.
     <br />   
     <br />   
-    <a href="https://arxiv.org/abs/2407.15593">preprint</a>
+    <a href="https://arxiv.org/abs/2407.15593">arXiv</a>
+    <a href="https://www.youtube.com/watch?v=OkulNwa6V_8&ab_channel=RobotsVisionandPerception">YouTube</a>
 </div>
+
+
 
 
 # Dependencies
