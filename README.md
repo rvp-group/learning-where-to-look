@@ -32,7 +32,7 @@ pip install .
 
 # Training
 
-### Download some data
+## Download some data
 
 ```bash
 ./download.sh 
@@ -42,12 +42,16 @@ The script will download some data that you can use to play with:
 ```
 ├── train_MH3D_10_scene --> contains all the preprocessed meshes used for training, SfM models and precomputed viewpoints
 ├── test_MH3D_2_scene --> contains all the preprocessed meshes used for testing, SfM models and precomputed viewpoints
-├── train_data_10_meshes_with_preprocessed_test.pickle --> contains data that can be loaded directly for learning, with essential (observed landmarks reprojections in image, landmarks in camera frame) train, validation, test, mean and std (last two used for input normalization)
-├── test_raw_data_2_meshes.pickle --> contains all preprocessed data used for testing with other information like locations used for evaluation
+├── train_data_10_meshes_with_preprocessed_test.pickle --> contains data that can be
+|                                                          loaded directly for learning, with essential (observed landmarks 
+|                                                          reprojections in image, landmarks in camera frame) train, 
+|                                                          validation, test, mean and std (of training set)
+├── test_raw_data_2_meshes.pickle --> contains all preprocessed data used 
+|                                     for testing with other information (i.e., locations used for evaluation)
 └── raw_MH3D_00017.pickle --> preprocessed test mesh you can use to visualize results
 ```
 
-### Run
+## Run
 
 Run training with the following script; the default is 300 epochs
 
@@ -55,12 +59,21 @@ Run training with the following script; the default is 300 epochs
 python3 lwl/apps/training/mlp_train.py --data_path data/train_data_10_meshes_with_preprocessed_test.pickle --test_data_path data/test_raw_data_2_meshes.pickle --checkpoint_path data/mymodels/tmp_training
 ```
 
-### Inference
+## Inference
+Evaluate trained model numerically
 
-Run inference with already trained model
+```bash
+python3 lwl/apps/inference/evaluate_model.py --train_data_path data/train_data_10_meshes_with_preprocessed_test.pickle --evaluate_data_path data/raw_MH3D_00017.pickle --model_dir data/model/
+```
+
+Evaluate trained model visually, showing best predicted viewpoints for each location and their observed landmarks
 ```bash
 python3 lwl/apps/inference/compute_active_map.py --train_data_path data/train_data_10_meshes_with_preprocessed_test.pickle --evaluate_data_path data/raw_MH3D_00017.pickle --model_dir data/model/ --enable_viz --config_path configurations/sampler_matterport_1.cfg --landmarks data/test_MH3D_2_scene/MH3D_00017/sparse/0/points3D.txt
 ```
+
+<div align="center">
+        <a href="https://github.com/rvp-group/learning-where-to-look"><img src="assets/active_map.gif"/></a>   
+</div>
 
 # Cite us
 If you use any of this code, please cite our <a href="https://arxiv.org/abs/2407.15593">paper</a> - accepted ECCV 2024:
@@ -75,7 +88,7 @@ If you use any of this code, please cite our <a href="https://arxiv.org/abs/2407
 ```
 
 # What's Missing
-The repo is currently under huge updates; you can keep track here
+The repo is currently under updates; you can keep track here
 
 | Feature/Component         | Status        |
 | ------------------------- | ------------- |
@@ -86,4 +99,4 @@ The repo is currently under huge updates; you can keep track here
 | Documentation             | ⚠️ In Progress |
 | Preprocessing             | ⚠️ In Progress |
 | Custom data setup         | ⚠️ In Progress |
-| Inference/plot active map | ⚠️ In Progress |
+| Inference/plot active map | ✅ In Progress |
