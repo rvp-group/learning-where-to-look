@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #define N_THREADS 32
 #define N_THREADS_CAM 8
 #define N_THREADS_ACTIVE_GRID 8 // 3D kernel, max 8 on z
