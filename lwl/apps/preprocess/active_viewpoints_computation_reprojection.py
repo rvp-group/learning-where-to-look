@@ -4,13 +4,14 @@ import sys
 import numpy as np
 
 from lwl.pyactivegrid import ActiveGrid
-from lwl.scripts.colmap.colmap_read_write_model import parse_landmarks
+from lwl.apps.utils.colmap.colmap_read_write_model import parse_landmarks
 
 parser = argparse.ArgumentParser(description='active camera grid calculation based on visibility')
 parser.add_argument('--landmarks', type=str, help='supports colmap type, or simply vector of 3d points')
 parser.add_argument('--config_path', type=str, help='path to yaml configuration file', required=True)
 parser.add_argument('--output_file', type=str, help='path to output grid', required=True)
 parser.add_argument('--mesh_path', type=str, help='use mesh to calculate minimum and maximum bounds of 3d map along each axis, if not uses the sparse model which might contain errors in landmarks position')
+parser.add_argument('--enable_viz', action='store_true', help='[DEBUG] enable voxel/locations visualization')
 args = parser.parse_args()
 
 infile = open(args.config_path, 'r')
@@ -58,20 +59,22 @@ if args.mesh_path is not None:
     except ImportError:
         print("Open3D is not installed, install it using: pip install open3d or don't use the mesh_path argument")
         exit(-1)
+else:
+    print("WARNING: voxelization might not be correct given outliers in SfM model, suggested to input the mesh file")
     
 min_grid_pos = np.array([x_min, y_min, z_min])
-min_grid_pos = np.where(min_grid_pos > 0, min_grid_pos + 0.5, min_grid_pos - 0.5)
-max_grid_pos = np.array([x_max, y_max, z_max])
-max_grid_pos = np.where(max_grid_pos > 0, max_grid_pos + 0.5, max_grid_pos - 0.5)
+max_grid_pos = np.array([x_max, y_max, z_max]) 
 
-print("overriding min and max grid positions, inference from data: {} {}".format(min_grid_pos, max_grid_pos))
-grid_dimensions = np.where(min_grid_pos < 0, np.abs(max_grid_pos) + np.abs(min_grid_pos), np.abs(max_grid_pos) - np.abs(min_grid_pos))
-print("map extents: {}".format(grid_dimensions))
+# precalculating grid dim and bucket extents
+grid_dimensions = np.abs(max_grid_pos) + np.abs(min_grid_pos)
 bucket_extents = np.array(grid_dimensions / bucket_ratio)
-print("bucket extents: {}".format(bucket_extents))
+max_grid_pos += bucket_extents
 
-print(min_grid_pos + bucket_extents * (bucket_ratio))
-# exit(0)
+# calculating again using updated max grid value, otherwise we always miss some part of the map
+grid_dimensions = np.abs(max_grid_pos) + np.abs(min_grid_pos)
+bucket_extents = np.array(grid_dimensions / bucket_ratio)
+print("overriding min and max grid positions, inference from data: {} {}".format(min_grid_pos, max_grid_pos))
+print("bucket extents: {}".format(bucket_extents))
 
 sparse = np.concatenate((landmarks, errors_reshaped, indices_reshaped), axis=1)
 
@@ -95,13 +98,16 @@ for i in range(active_grid.size()):
     grid_file.write(line)
 grid_file.close()
 
-# for each direction
-    # reproject structure into virtual view, given intrinsics, (this is already done in device, maybe we can keep this) 
-        # get reprojection
-        # 3d structure
-        # error
-        # give this as input to the network
+if(args.enable_viz):
+    locations = list()
+    for i in range(active_grid.size()):
+        locations.append(active_grid.getPose(i))
 
+    locations = np.asarray(locations)
+    points = o3d.geometry.PointCloud()
+    points.points = o3d.utility.Vector3dVector(locations)
+    mesh.compute_vertex_normals()
+    o3d.visualization.draw_geometries([mesh, points], window_name="camera locations")
 
 
 

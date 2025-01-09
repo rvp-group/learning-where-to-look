@@ -66,14 +66,12 @@ namespace ds {
       d_max_grid_pos_    = Eig2CUDA(max_grid_pos);
 
       // calculating how many buckets along the grid for each dim
-      dim_x_    = ((uint) d_grid_dimensions_.x / d_bucket_extents_.x + 0.5) + 1;
-      dim_y_    = ((uint) d_grid_dimensions_.y / d_bucket_extents_.y + 0.5) + 1;
+      dim_x_    = ((uint) (d_grid_dimensions_.x / d_bucket_extents_.x + 0.5));
+      dim_y_    = ((uint) (d_grid_dimensions_.y / d_bucket_extents_.y + 0.5));
       dim_yx_   = dim_y_ * dim_x_; // we need to always make this product when accessing, better here
-      dim_z_    = ((uint) d_grid_dimensions_.z / d_bucket_extents_.z + 0.5) + 1;
-      capacity_ = dim_yx_ * dim_z_;
+      dim_z_    = ((uint) (d_grid_dimensions_.z / d_bucket_extents_.z + 0.5));
 
-      // std::cerr << dim_x_ << " " << dim_y_ << " " << dim_z_ << std::endl;
-      // exit(0);
+      capacity_ = dim_yx_ * dim_z_;
 
       // spherical subsampling
       if (camera) {
