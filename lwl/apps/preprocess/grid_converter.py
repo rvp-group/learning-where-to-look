@@ -84,7 +84,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
 
-    if(args.ext == 'pickle'):
+    if(args.ext == '.pickle'):
         grid = parse_active_grid(args.grid_file)
         for k, v in grid.items():
             for d in v["directions"]:
@@ -113,6 +113,9 @@ if __name__ == "__main__":
                 # print(v['directions'])
                 line += str(int(v['hits'][0])) + ' ' + str(v['directions'][0][0]) + ' ' + str(v['directions'][0][1]) + ' ' + str(v['directions'][0][2]) + ' ' + str(v['directions'][0][3]) + '\n'
                 file.write(line)
+    else:
+        print("output extension must be .txt or .pickle")
+        
     
 
 
