@@ -82,11 +82,13 @@ python3 lwl/apps/inference/compute_active_map.py --train_data_path data/train_da
 If you use any of this code, please cite our <a href="https://arxiv.org/abs/2407.15593">paper</a> - accepted ECCV 2024:
 
 ```
-@article{di2024learning,
-  title={Learning Where to Look: Self-supervised Viewpoint Selection for Active Localization using Geometrical Information},
+@inproceedings{di2024learning,
+  title={Learning Where to Look: Self-supervised Viewpoint Selection for Active Localization Using Geometrical Information},
   author={Di Giammarino, Luca and Sun, Boyang and Grisetti, Giorgio and Pollefeys, Marc and Blum, Hermann and Barath, Daniel},
-  journal={arXiv preprint arXiv:2407.15593},
-  year={2024}
+  booktitle={European Conference on Computer Vision},
+  pages={188--205},
+  year={2024},
+  organization={Springer}
 }
 ```
 
